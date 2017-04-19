@@ -1,0 +1,395 @@
+package com.sf.module.interfaceInfor.servlet;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jws.WebParam;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.QueryParam;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONNull;
+import net.sf.json.JSONObject;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.cxf.jaxws.spring.NamespaceHandler.SpringServerFactoryBean;
+
+import com.sf.module.common.Constant;
+import com.sf.module.common.util.CacheUtils;
+import com.sf.module.common.util.DateUtil;
+import com.sf.module.common.util.JacksonUtils;
+import com.sf.module.common.util.ReflectionUtils;
+import com.sf.module.interfaceInfor.domain.InterfaceInfoVO;
+import com.sf.module.interfaceInfor.domain.RequestParamVO;
+import com.sf.module.interfaceInfor.oauth.OauthUtils;
+import com.sf.module.interfaceInfor.utils.ApplicationContextUtil;
+import com.sf.module.security.domain.ReturnResult;
+
+/**
+ * 用于处理接受客户端http 请求的servlet
+ * 跟客户端请求的参数，调用对应的service 并返回数据至客户端
+
+ */
+public class ReaderRestServlet extends HttpServlet {
+    
+    private static final long serialVersionUID = 1L;
+    private static Log log = LogFactory.getLog(ReaderRestServlet.class);
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public ReaderRestServlet() {
+        super();
+    }
+
+    /**
+     * get方式请求
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        this.doPost(request,response);
+    }
+    
+
+
+    /**
+     * post 方式请求
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        
+        response.setCharacterEncoding("utf-8");
+        response.setContentType("application/json;charset=UTF-8");
+        PrintWriter  out = response.getWriter();
+       
+        RequestParamVO requestParamVO = null; 
+        ReturnResult<?> ret = new ReturnResult();
+        try
+        {
+            //获取请求参数
+            requestParamVO = getReqestParam(request);
+            //拦截
+            String authorization = request.getHeader("Authorization");
+            boolean isPass = OauthUtils.checkToken(requestParamVO.getToken(), authorization);
+            if(!isPass){
+                throw new Exception("ERROR:check token error!");
+            }
+            //前点
+            log.info("TraceBackId=" + requestParamVO.getTraceBackId() + ",functionCode="+requestParamVO.getFunctionCode()+"," + "position=before,"
+                + "time=" + System.currentTimeMillis() + ",params=()");
+            //根据请求的参数调用对应的接口方法
+            ret = (ReturnResult<?>)invokeService(requestParamVO);
+        }catch (Exception e){
+            ((ReturnResult<?>)ret).setReturnFlag("1");
+            ((ReturnResult<?>)ret).setMessageInfor(e.getMessage());
+            ((ReturnResult<?>)ret).setMessageBody(e.getMessage());
+        }
+        //返回数据
+        String json =  JacksonUtils.toJson(ret,null);
+        out.print(json);
+        out.flush();
+        //后点
+        log.info("TraceBackId=" + requestParamVO.getTraceBackId() + ",functionCode="+requestParamVO.getFunctionCode()+"," + "position=after,"
+            + "time=" + System.currentTimeMillis() + ",params=()");
+    }
+    
+    /**
+     * 获取客户端请求参数
+     * @param request
+     * @throws Exception 
+     * @see ReaderRestServlet#getReqestParam
+     */
+    private RequestParamVO getReqestParam(HttpServletRequest request) throws Exception{
+        
+        RequestParamVO requestParamVO  = new RequestParamVO();
+        if("POST".equals(request.getMethod())){
+            try{
+                BufferedReader reader = new BufferedReader(new InputStreamReader(request.getInputStream()));
+                String params="";
+                String strLine=null;
+                while((strLine=reader.readLine())!=null){
+                    params+=strLine+"\n";
+                }
+                Map<String, String> paraMap=getUrlParameters(params);
+                
+                requestParamVO.setFunctionCode(paraMap.get("functionCode"));
+                requestParamVO.setCallback(paraMap.get("callback"));
+                requestParamVO.setReturnType(paraMap.get("returnType"));
+                requestParamVO.setIfPost(paraMap.get("ifPost"));
+                requestParamVO.setAsync(paraMap.get("async"));
+                requestParamVO.setParamJson(URLDecoder.decode(paraMap.get("paramJson"), "UTF-8"));
+                requestParamVO.setTraceBackId(paraMap.get("traceBackId"));
+                requestParamVO.setToken(paraMap.get("token"));
+                
+            }catch(Exception e){
+             // TODO 异常处理，放在最后去弄
+                throw new Exception("");
+            }
+        }
+        else{
+            requestParamVO.setFunctionCode(request.getParameter("functionCode"));
+            requestParamVO.setParamJson(request.getParameter("paramJson"));
+            requestParamVO.setCallback(request.getParameter("callback"));
+            requestParamVO.setReturnType(request.getParameter("returnType"));
+            requestParamVO.setIfPost(request.getParameter("ifPost"));
+            requestParamVO.setAsync(request.getParameter("async"));
+            requestParamVO.setTraceBackId(request.getParameter("traceBackId"));
+            requestParamVO.setToken(request.getParameter("token"));
+        }
+        
+        return requestParamVO;
+    }
+    
+    /**
+     * 执行service 接口
+     * @return
+     * @throws Exception 
+     * @see ReaderRestServlet#invokeService
+     */
+    private Object invokeService( RequestParamVO requestParamVO) throws Exception{
+        String functionCode=requestParamVO.getFunctionCode();
+        String paramJson=requestParamVO.getParamJson();
+        Object ret = null;
+        InterfaceInfoVO inforVo = (InterfaceInfoVO)CacheUtils.getValue(functionCode);//获取对应的接口信息对象
+        if(inforVo==null){
+            //TODO 如果没有缓存数据，直接抛出异常
+            throw new Exception("没有找到与"+functionCode+"对应的接口！");
+        }
+        String methodName = inforVo.getMethodName(); //要调用的方法名称
+       
+            try
+            {
+                //从缓存中取service代理对象，若没有从 Spring容器中获取service 代理对象
+                SpringServerFactoryBean bean = inforVo.getBeanOfService();
+                if(bean==null){
+                     bean = (SpringServerFactoryBean)
+                     ApplicationContextUtil.getContext().
+                     getBean(inforVo.getBeanName());
+                }
+                
+                // 从缓存中获取 serviceBean，若没有则从代理bean中获取
+                Object serviceBean= inforVo.getServiceBean();
+                if(serviceBean==null){
+                    bean.getServiceBean();
+                }
+                
+                // 从缓存中获取参数列表类型，若没有则通过反射获取
+                Class<?>[]  parameterTypes =inforVo.getParameterTypes();
+                if(parameterTypes==null || parameterTypes.length==0){
+                    parameterTypes = ReflectionUtils.getMethodParamTypes(serviceBean, methodName);
+                }
+                
+                //执行方法需要的参数
+                Object[] params = null;
+                try
+                {
+                    params = getParams(bean,paramJson,inforVo,parameterTypes,requestParamVO.getTraceBackId());
+                }
+                catch (NoSuchMethodException e)
+                {
+                    throw new Exception("没有找到"+methodName+"方法！");
+                }
+                // 反射执行方法
+                ret =  ReflectionUtils.invokeMethod(serviceBean, 
+                    methodName, 
+                    parameterTypes, 
+                    params);
+            } 
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                // TODO 异常处理，放在最后去弄
+                throw new Exception("没有找到对应的service接口！");
+            }
+        return ret;
+    }
+    
+    /**
+     * 获取执行方法需要的参数列表
+     * @param bean
+     * @param paramJson
+     * @param inforVo
+     * @param parameterTypes
+     * @return
+     * @throws Exception
+     * @see ReaderRestServlet#getParams
+     */
+      private Object[] getParams(SpringServerFactoryBean bean,String paramJson,
+          InterfaceInfoVO inforVo,Class<?>[]  parameterTypes,String traceBackId) throws Exception{
+          
+          JSONObject jsonObject =  JSONObject.fromObject(paramJson); 
+          
+          Method interfaceMethod =  inforVo.getInterFaceMethod();
+          if(interfaceMethod==null){
+              interfaceMethod =  bean.getServiceClass().
+                  getMethod(inforVo.getMethodName(), parameterTypes);    
+          }
+          
+          Class<?>[] ps =interfaceMethod.getParameterTypes();
+          Annotation[][] annotations = interfaceMethod.getParameterAnnotations();
+          Object[] params = new Object[ps.length] ;
+          for(int i = 0;i<ps.length;i++){
+//              Parameter p = ps[i];
+//              Class<?> clazz = p.getType();
+              Class<?> clazz = ps[i];
+              String paramName = "";
+              if(Constant.SERVICE_TYPE.SERVICE_TYPE_SERVICE
+                  .equals(inforVo.getServiceType())){
+                  WebParam webParam = (WebParam)annotations[i][0];
+                  paramName = webParam!=null?webParam.name(): "";
+                 
+                  
+              }else{
+                  QueryParam webParam = (QueryParam)annotations[i][0];
+                  paramName = webParam!=null?webParam.value():"";
+//                  QueryParam webParam =  ps[i].getAnnotation(QueryParam.class);
+//                  paramName = webParam.value(); 
+              }
+             
+              Object param = null;
+              if(null!=jsonObject.get(paramName)){
+                  if(jsonObject.get(paramName) instanceof JSONArray){
+                      JSONArray jsonArray = (JSONArray)jsonObject.get(paramName);
+                      param = jsonArray.toString();
+                  }else  if(jsonObject.get(paramName) instanceof JSONObject){
+                      JSONObject jsonArray = (JSONObject)jsonObject.get(paramName);
+                      param = jsonArray.toString();
+                  }else if((Long.TYPE == clazz)  
+                      || (Long.class == clazz)){
+                      Object o = jsonObject.get(paramName);
+                      if(o!=null || "".equals(o)){
+                          param = Long.valueOf((String)o) ;
+                      }
+                  }else if ((Float.TYPE == clazz)  
+                      || (Float.class == clazz)) { 
+                      Object o = jsonObject.get(paramName);
+                      if(o!=null || "".equals(o)){
+                          param = Float.valueOf((String)o) ;
+                      }
+                  } else if ((Short.TYPE == clazz)  
+                      || (Short.class == clazz)) {  
+                      Object o = jsonObject.get(paramName);
+                      if(o!=null || "".equals(o)){
+                          param = Short.valueOf((String)o) ;
+                      } 
+                  } else if ((Double.TYPE == clazz)  
+                      || (Double.class == clazz)) {  
+                      Object o = jsonObject.get(paramName);
+                      if(o!=null || "".equals(o)){
+                          param = Double.valueOf((String)o) ;
+                      }  
+                  }else if((Date.class == clazz)){
+                      String o = (String)jsonObject.get(paramName);
+                      try{
+                          Date date = DateUtil.parse(o, DateUtil.FORMAT);
+                          param =date;
+                      }catch(Exception e){
+                         throw new Exception("日期格式不正确");
+                      }
+                      
+                  }else if(String.class == clazz){
+                      param = jsonObject.get(paramName); 
+                      if(param instanceof JSONNull || param==null){
+                          param = "";
+                      }
+                  }else{
+                      
+                      
+                  }
+              }else if("traceBackId".equals(paramName)){
+                  param=  traceBackId;
+              }
+              
+              params[i]=param;
+          }
+            return params;
+      }
+    
+    /**
+     * 从URL中获取请求参数
+     * @param url
+     * @return
+     * @throws UnsupportedEncodingException
+     * @see ReaderRestServlet#getUrlParameters
+     */
+    private Map<String, String> getUrlParameters(String url)   throws UnsupportedEncodingException {
+        
+        Map<String, String> params = new HashMap<String, String>();
+        if(url==null){
+            return params;
+        }
+        url=url.trim();
+        if (url.length() > 1) {
+            String key="heardJson";
+            String value=getUrlByKey(url, key);
+            if(value!=null){
+//            params.put(key, URLDecoder.decode(value, "UTF-8"));
+                params.put(key,  value);
+                url=url.replace(value, "");
+            }
+            
+            key="paramJson";
+            value=getUrlByKey(url, key);
+            if(value!=null){
+//            params.put(key, URLDecoder.decode(value, "UTF-8"));
+                params.put(key,  value);
+                url=url.replace(value, "");
+            }
+            if(url.length()>1){
+                for (String param : url.split("&")) {
+                    String pair[] = param.split("=");
+                    if (pair.length > 1) {
+                        if (pair[1] != null) {
+//                        key = URLDecoder.decode(pair[0], "UTF-8");
+                            key = pair[0];
+//                        value = URLDecoder.decode(pair[1], "UTF-8");
+                            value=pair[1];
+                            params.put(key, value);
+                        }
+                    }
+                }
+            }
+        }
+
+        return params;
+    }
+    private String getUrlByKey(String url, String key){
+        String value=null;
+        String findKey="&"+key+"=";
+        int indexKey=url.indexOf(findKey);
+        if(indexKey<0){
+            findKey=key+"=";
+            indexKey=url.indexOf(findKey);
+            if(indexKey!=0){
+                return value;
+            }
+        }
+        int indexEnd=0;
+        if(indexKey>=0){
+            value=url.substring(indexKey+findKey.length());
+            indexEnd=value.indexOf("&");
+            if(indexEnd>0){
+                value=value.substring(0, indexEnd);
+            }
+        }
+        return value;
+    }
+}
