@@ -1,0 +1,35 @@
+# simple
+只要在hibernate.cfg.xml添加这句话，就可以自动生成数据表 
+<property name="hibernate.hbm2ddl.auto">update</property> 
+
+update：表示自动根据model对象来更新表结构，启动hibernate时会自动检查数据库，如果缺少表，则自动建表；如果表里缺少列，则自动添加列。 
+
+还有其他的参数： 
+create：启动hibernate时，自动删除原来的表，新建所有的表，所以每次启动后的以前数据都会丢失。 
+
+create-drop：启动hibernate时，自动创建表，程序关闭时，自动把相应的表都删除。所以程序结束时，表和数据也不会再存在。 
+
+PS：数据库要预先建立好，因为hibernate只会建表，不会建库
+
+ 
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+
+表结构和数据总是在程序执行的时候无端的修改，折腾了好长时间，查了很长时间hibernate的数据库映射文件和接口程序，始终没有发现有什么错误，到最后才发现了它！
+           <property name="hibernate.hbm2ddl.auto" value="update" />
+解释如下：
+
+hibernate.hbm2ddl.auto Automatically validate or export schema DDL to the database when the SessionFactory is created. With create-drop, the database schema will be dropped when the SessionFactory is closed explicitly. eg. validate | update | create | create-drop
+
+其实这个参数的作用主要用于：自动创建|更新|验证数据库表结构。
+如果没有此方面的需求建议set value="none".
+
+其它几个参数的意思:
+
+validate               加载hibernate时，验证创建数据库表结构
+create                  每次加载hibernate，重新创建数据库表结构
+create-drop        加载hibernate时创建，退出是删除表结构
+update                 加载hibernate自动更新数据库结构
+
+如果发现数据库表丢失或新增，请检查hibernate.hbm2ddl.auto的配置 可设置 <property name="hibernate.hbm2ddl.auto" value="none" />
