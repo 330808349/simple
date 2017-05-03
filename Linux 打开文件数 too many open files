@@ -70,3 +70,59 @@ vim /etc/security/limits.conf
 fdipzone soft nofile 8192  
 fdipzone hard nofile 8192  
 改完后注销一下就能生效。
+
+============================================== 第二点 ，代码问题 代码中打开了IO流。一定要关闭IO流 =======================================
+public static List<GpsPoint> getArrayList() throws IOException {  
+  
+        List<GpsPoint> pointList = null;  
+        // 读取配置文件  
+        InputStream in = ParseGpsFile.class.getClassLoader().getResourceAsStream("GPS1.TXT");  
+          
+        // 读路径出错，换另一种方式读取配置文件  
+        if (null == in) {  
+              
+            System.out.println("读取文件失败");  
+              
+            return pointList;  
+        }  
+          
+        pointList = new ArrayList<GpsPoint>();  
+          
+        try {  
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));  
+            String longtude = "";  
+            String latude = "";  
+            String elevation = "";  
+            while ((longtude = br.readLine()) != null) {  
+                  
+                // 读下一行数据，读纬度  
+                latude = br.readLine();  
+                  
+                if (null == latude) {  
+                      
+                    // 退出循环  
+                    break;  
+                }  
+                  
+                // 读下一行数据，读海拔  
+                elevation = br.readLine();  
+                if (null == latude) {  
+                      
+                    // 退出循环  
+                    break;  
+                }  
+                  
+                // 加入一个点  
+                pointList.add(gps2point(longtude, latude, elevation));  
+            }  
+              
+            in.close();  
+            System.out.println("\n\n");  
+        } catch (Exception e) {  
+              
+            in.close();  
+            e.printStackTrace();  
+        }  
+          
+        return pointList;  
+    }  
