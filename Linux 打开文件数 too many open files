@@ -1,0 +1,72 @@
+Linux 打开文件数 too many open files 解决方法
+
+too many open files
+出现这句提示的原因是程序打开的文件/socket连接数量超过系统设定值。
+
+查看每个用户最大允许打开文件数量
+ulimit -a
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+fdipzone@ubuntu:~$ ulimit -a  
+core file size          (blocks, -c) 0  
+data seg size           (kbytes, -d) unlimited  
+scheduling priority             (-e) 20  
+file size               (blocks, -f) unlimited  
+pending signals                 (-i) 16382  
+max locked memory       (kbytes, -l) 64  
+max memory size         (kbytes, -m) unlimited  
+open files                      (-n) 1024  
+pipe size            (512 bytes, -p) 8  
+POSIX message queues     (bytes, -q) 819200  
+real-time priority              (-r) 0  
+stack size              (kbytes, -s) 8192  
+cpu time               (seconds, -t) unlimited  
+max user processes              (-u) unlimited  
+virtual memory          (kbytes, -v) unlimited  
+file locks                      (-x) unlimited  
+
+其中 open files (-n) 1024 表示每个用户最大允许打开的文件数量是1024
+
+查看当前系统打开的文件数量
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+lsof | wc -l  
+watch "lsof | wc -l"  
+
+查看某一进程的打开文件数量
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+lsof -p pid | wc -l  
+lsof -p 1234 | wc -l  
+
+设置open files数值方法
+ulimit -n 2048
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+fdipzone@ubuntu:~$ ulimit -n 2048  
+fdipzone@ubuntu:~$ ulimit -a  
+core file size          (blocks, -c) 0  
+data seg size           (kbytes, -d) unlimited  
+scheduling priority             (-e) 20  
+file size               (blocks, -f) unlimited  
+pending signals                 (-i) 16382  
+max locked memory       (kbytes, -l) 64  
+max memory size         (kbytes, -m) unlimited  
+open files                      (-n) 2048  
+pipe size            (512 bytes, -p) 8  
+POSIX message queues     (bytes, -q) 819200  
+real-time priority              (-r) 0  
+stack size              (kbytes, -s) 8192  
+cpu time               (seconds, -t) unlimited  
+max user processes              (-u) unlimited  
+virtual memory          (kbytes, -v) unlimited  
+file locks                      (-x) unlimited  
+这样就可以把当前用户的最大允许打开文件数量设置为2048了，但这种设置方法在重启后会还原为默认值。
+
+永久设置方法
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+vim /etc/security/limits.conf  
+在最后加入  
+* soft nofile 4096  
+* hard nofile 4096  
+最前的 * 表示所有用户，可根据需要设置某一用户，例如
+[plain] view plain copy 在CODE上查看代码片派生到我的代码片
+fdipzone soft nofile 8192  
+fdipzone hard nofile 8192  
+改完后注销一下就能生效。
