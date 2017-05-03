@@ -1,0 +1,33 @@
+还是先看API
+
+void	close() 
+          Closes this stream and releases any system resources associated with it.
+close
+void close()
+           throws IOException
+Closes this stream and releases any system resources associated with it. If the stream is already closed then invoking this method has no effect.
+Throws:
+IOException - if an I/O error occurs
+ 
+
+关闭该流并释放与之关联的所有资源。在关闭该流后，再调用 read()、ready()、mark()、reset() 或 skip() 将抛出 IOException。关闭以前关闭的流无效。 
+
+[html] view plain copy
+public void close() throws IOException {  
+    synchronized (lock) {  
+        if (in == null)  
+        return;  
+        in.close();  
+        in = null;  
+        cb = null;  
+    }  
+}  
+一般情况下是：先打开的后关闭，后打开的先关闭
+
+另一种情况：看依赖关系，如果流a依赖流b，应该先关闭流a，再关闭流b
+
+例如处理流a依赖节点流b，应该先关闭处理流a，再关闭节点流b
+
+当然完全可以只关闭处理流，不用关闭节点流。处理流关闭的时候，会调用其处理的节点流的关闭方法
+
+如果将节点流关闭以后再关闭处理流，会抛出IO异常
