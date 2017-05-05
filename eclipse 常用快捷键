@@ -1,0 +1,17 @@
+Ctrl + Shift + O: 引入imports语句
+Ctrl + Shift + T: 打开Open Type查找类文件
+Ctrl + Shift + F4: 关闭打开的所有窗口
+Ctrl + Shift + F: 整形
+Ctrl + Alt + ↓(↑) : 向下(上)复制本行 (搞笑)
+Ctrl + D : 删除本行
+Ctrl + O: Open declarations F3 : Open Declaration
+Ctrl + E : 打开编辑器（切换窗口）
+Ctrl + / : 注释本行
+Alt + Shift + R : 重命名
+Alt + Shift + F : 自动格式
+Alt + Shift + L : 抽取本地变量
+Alt + Shift + M : 抽取方法
+Alt + Shift + j : 添加DOC注释
+Alt + /: 提示
+Alt + . : 输出提示搜索
+按 alt+/
