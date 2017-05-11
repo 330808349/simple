@@ -1,0 +1,16 @@
+//定义server
+private static Server server = null ;
+
+//启动内存 H2 数据库
+if(MainApp.server==null){
+		MainApp.server = Server.createTcpServer("-tcpAllowOthers").start();
+}
+    
+// 停止程序时候 关闭 H2数据库   
+@Override
+public void stop() throws Exception {
+  if(MainApp.server!=null){
+    MainApp.server.stop();
+  }
+  super.stop();
+}
