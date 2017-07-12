@@ -1,0 +1,13 @@
+SVN与JIRA的关联
+
+svn 
+SVN与JIRA的关联一直都没能装成功，今天凝聚心思花了一天时间整合好了。下面是自己整理的步骤：
+一、搭建好SVN环境，尤其是要把SVN的服务注册成系统服务
+二、装好JIRA，自己用是jira-4.3.4破解版
+三、下载SVN与JIRA的插件并解压，然后拷贝插件包下lib包里的三个jar，放到Atlassian\JIRA 4.3.4\atlassian-jira\WEB-INF\lib下，再拷贝插件包里的subversion-jira-plugin.properties文件放到Atlassian\JIRA 4.3.4\atlassian-jira\WEB-INF\classes下
+四、修改subversion-jira-plugin.properties文件，修改里面的三处内容
+a.svn.root
+b.svn.username
+c.svn.password
+直接将前面的#号去掉，svn.root=这里填的是SVN的版本库地址，如果你的版本库访问的是这个地址svn://localhost/test/doc，那直接将svn.root=svn://localhost[localhost可以改写成IP地址]/test/doc
+svn.username=这个是svn里[conf下的auth和passwd里配置的用户和用户密码]上面配置的用户名，svn.password=填SVN用户密码就行。
