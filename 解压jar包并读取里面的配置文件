@@ -1,0 +1,49 @@
+解压 jar 包 并读取里面的配置文件 代码参考如下：
+/** 
+    * @Description:  解压并读取配置文件内容
+    */
+    public static Info unZipFile(File file) throws IOException{  
+    	Info info = new Info();
+    	ZipFile javafxZipFile = null; 
+    	try{
+    		//1.获取GHS_WB.jar 
+    		javafxZipFile = new ZipFile(file);
+    		ZipEntry wbEentry =  javafxZipFile.getEntry("bin/GHS_WB.jar");
+    		if(wbEentry==null){
+    			return null;
+    		}
+    		ZipInputStream inZip = new ZipInputStream(javafxZipFile.getInputStream(wbEentry));
+    		//2.查找info.properties文件位置
+    		ZipEntry zipEntry = null;
+    		Properties pro = new Properties();
+    		while((zipEntry = inZip.getNextEntry()) != null){
+    			if("conf/info.properties".equals(zipEntry.getName())){
+    				//3.获取info.properties文件内容
+    	        	pro.load(inZip);
+    	        	info.setVersion(pro.getProperty("version"));
+    	        	info.setBuildID(pro.getProperty("buildID"));
+    	        	info.setVersionType(pro.getProperty("versionType"));
+    	        	break;
+    			}
+    		}
+    		if(pro.isEmpty()){
+    			return null;
+    		}else{
+    			pro.clear();
+    		}
+        	inZip.close();
+        	javafxZipFile.close();
+    	}catch(IOException e){  
+            e.printStackTrace(); 
+            throw e;
+        }finally{  
+           try{  
+	           if(javafxZipFile != null){  
+	        	   javafxZipFile.close();  
+	           }  
+	           }catch(Exception e) {  
+	               e.printStackTrace();  
+	           }  
+           }  
+        return info;
+    } 
