@@ -1,0 +1,63 @@
+[TOC]
+#SonarQube正式服务器搭建（Linux环境）
+## 安装postgresql数据库
+1. 进入[postgresql](https://www.postgresql.org/)官网下载[安装文件](http://www.enterprisedb.com/products/pgdownload.do#linux)
+2. 执行安装，根据提示输入安装位置、数据存放位置、密码完成安装
+3. 使用createuser命令新建用户
+```sh
+createuser -U postgres -s -P sonar_db_user
+```
+4. 使用createdb命令新建数据库
+```sh
+createdb -U sonar_db_user sonardb
+```
+##安装sonarQube
+1. 新建文件`/etc/init.d/sonar`
+```bash
+#!/bin/sh
+#
+# rc file for SonarQube
+#
+# chkconfig: 345 96 10
+# description: SonarQube system (www.sonarsource.org)
+#
+### BEGIN INIT INFO
+# Provides: sonar
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Short-Description: SonarQube system (www.sonarsource.org)
+# Description: SonarQube system (www.sonarsource.org)
+### END INIT INFO
+ 
+/usr/bin/sonar $*
+```
+2. 注册启动项
+   (Ubuntu, 32 bit):
+```sh
+sudo ln -s $SONAR_HOME/bin/linux-x86-32/sonar.sh /usr/bin/sonar
+sudo chmod 755 /etc/init.d/sonar
+sudo update-rc.d sonar defaults
+```
+  (RedHat, CentOS, 64 bit):
+```sh
+sudo ln -s $SONAR_HOME/bin/linux-x86-64/sonar.sh /usr/bin/sonar
+sudo chmod 755 /etc/init.d/sonar
+sudo chkconfig --add sonar
+```
+##配置及启动sonar
+1. 编辑 $SONAR_HOME/conf/sonar.properties 加入配置项
+```properties
+sonar.jdbc.username=sonar_db_user
+sonar.jdbc.password=sonar123
+sonar.jdbc.url=jdbc:postgresql://localhost/sonardb
+sonar.web.host=10.88.15.110
+sonar.web.port=80
+```
+2. 启动sonarqube
+```sh
+sonar start
+```
+3. 访问sonarqube
+   [http://10.88.15.110](http://10.88.15.110)
