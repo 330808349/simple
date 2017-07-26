@@ -1,0 +1,5 @@
+	private String getTableNameOf(Class<?> clz){
+        return HbMappingHolder.getInstance().getTableName(clz);
+    }
+    
+    调用示例 ： getTableNameOf（Role.class）;
