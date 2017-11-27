@@ -1,0 +1,9 @@
+HTTP请求时候总是设置的两个参数ConnectionTimeOut和SocketTimeOut  在HTTP请求时候总是设置两个参数，就是连接超时和Socket超时 
+1  public static final String SO_TIMEOUT = "http.socket.timeout";
+2  public static final String CONNECTION_TIMEOUT ="http.connection.timeout"; 
+解析：一次http请求，必定会有三个阶段，
+一：建立连接；
+二：数据传送；
+三，断开连接。当建立连接在规定的时间内（ConnectionTimeOut ）没有完成，那么此次连接就结束了。
+后续的SocketTimeOutException就一定不会发生。只有当连接建立起来后，也就是没有发生ConnectionTimeOutException ，才会开始传输数据，
+如果数据在规定的时间内(SocketTimeOut)传输完毕,则断开连接。否则，触发SocketTimeOutException  
