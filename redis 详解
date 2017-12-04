@@ -1,3 +1,5 @@
 redis 下载地址 window 版本 https://github.com/MicrosoftArchive/redis/releases
 redis 详解地址 http://www.cnblogs.com/wyy123/p/6078593.html
 java对redis的基本操作 讲解地址 http://www.cnblogs.com/edisonfeng/p/3571870.html
+// redis 对 分布式加锁
+http://mp.weixin.qq.com/s/qJK61ew0kCExvXrqb7-RSg
