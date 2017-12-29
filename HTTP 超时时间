@@ -7,3 +7,6 @@ HTTP请求时候总是设置的两个参数ConnectionTimeOut和SocketTimeOut  �
 三，断开连接。当建立连接在规定的时间内（ConnectionTimeOut ）没有完成，那么此次连接就结束了。
 后续的SocketTimeOutException就一定不会发生。只有当连接建立起来后，也就是没有发生ConnectionTimeOutException ，才会开始传输数据，
 如果数据在规定的时间内(SocketTimeOut)传输完毕,则断开连接。否则，触发SocketTimeOutException  
+
+httpClient 使用
+http://blog.csdn.net/qianlong2hao/article/details/50175939
