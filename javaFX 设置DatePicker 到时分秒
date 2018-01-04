@@ -1,0 +1,41 @@
+public class DateTimePicker extends DatePicker {   
+private final String pattern = "yyyy-MM-dd HH:mm";   
+private static final Logger logger = Logger.getLogger(DateTimePicker.class);
+    /**     * 构造器     */   
+    public DateTimePicker() {        
+      StringConverter<LocalDate> converter = new StringConverter<LocalDate>() {       
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);            
+        SimpleDateFormat format= new SimpleDateFormat(pattern);            
+        String str = null ;            
+        @Override            
+        public String toString(LocalDate date) {                
+        if (date != null) {                    
+          Date d ;                    
+          if(str!=null){                       
+            try {                           
+              d = format.parse(str);                      
+            } catch (ParseException e) {                           
+              d = new Date();                       
+            }                    
+          }else{                      
+            d = new Date();                 
+          }                  
+          LocalDateTime time = date.atTime(d.getHours(), d.getMinutes());     
+          return dateFormatter.format(time);        
+        } else {                
+          return "";               
+        }          
+      }
+      @Override            
+      public LocalDate fromString(String string) {               
+        str = string ;                
+        if (string != null && !string.isEmpty()) {                    
+          return LocalDate.parse(string, dateFormatter);               
+        } else {                    
+          return null;                
+        }            
+      }        
+    };        
+    this.setConverter(converter);  
+   }
+}
