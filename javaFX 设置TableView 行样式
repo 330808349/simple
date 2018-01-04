@@ -1,0 +1,24 @@
+this.view.setRowFactory(new Callback<TableView<TransferBoardVo>, TableRow<TransferBoardVo>>() {
+  @Override                            
+  public TableRow<TransferBoardVo> call(                                    
+  TableView<TransferBoardVo> param) {  
+    System.out.println("========+++++++++++++============");                                
+    TableRow<TransferBoardVo> row = new TableRow<TransferBoardVo>();                                
+    row.itemProperty().addListener(                                        
+      new ChangeListener<TransferBoardVo>() {
+        @Override                                            
+        public void changed(                                                    
+        ObservableValue<? extends TransferBoardVo> observable,                                                    
+        TransferBoardVo oldValue,                                                    
+        TransferBoardVo newValue) {                                                
+        System.out.println("=====================");                                                
+        if (newValue != null && "SZX".equals(newValue.getArrival())) {                                                    
+          row.setStyle("-fx-background-color: green");                                                
+        }                                            
+      }                                        
+    });                                
+    return row;                            
+  }                        
+});
+
+更多例子参照 http://blog.csdn.net/paincupid/article/details/9252553
