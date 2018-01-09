@@ -1,0 +1,19 @@
+ParameterizedType应用，java反射，获取参数化类型的class实例
+ParameterizedType是一个接口，这个类可以用来检验泛型是否被参数化
+http://blog.csdn.net/datouniao1/article/details/53788018
+
+public class Dao<T> {      
+  private static PreparedStatement st = null;      
+  public Class clazz;      
+  public Dao() {          
+    Type superclass = getClass().getGenericSuperclass();         
+    ParameterizedType parameterizedType = null;         
+    if (superclass instanceof ParameterizedType) {         
+      parameterizedType = (ParameterizedType) superclass;             
+      Type[] typeArray = parameterizedType.getActualTypeArguments();            
+      if (typeArray != null && typeArray.length > 0) {            
+        clazz=(Class)typeArray[0];                        
+       }         
+     }    
+   } 
+ }
