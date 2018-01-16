@@ -1,0 +1,7 @@
+
+Set ws = CreateObject("Wscript.Shell") 
+ws.run "cmd /c java -jar -Dprism.order=sw -Xmx1024m -Xms256m bin\GHS_WB.jar vbs",vbhide 
+上面是 启动用javaFX 写的客户端 , 在运行过程中由于每一个电脑的硬件环境不一样,有一些显卡对javaFx
+的渲染有异常, 故 在启动时候增加参数 -Dprism.order=sw ,让程序渲染实现软渲染,
+硬渲染: 通过 电脑显卡渲染
+软渲染: 通过 电脑cpu渲染出来
