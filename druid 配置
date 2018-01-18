@@ -1,0 +1,29 @@
+http://blog.csdn.net/hj7jay/article/details/51686418
+
+web.xml 中可以指定用户和密码
+
+<servlet>         
+    <servlet-name>DruidStatView</servlet-name>       
+    <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>    
+    <init-param>        
+        <param-name>resetEnable</param-name>     
+        <param-value>true</param-value>    
+    </init-param>     
+    <init-param>      
+        <param-name>loginUsername</param-name>     
+        <param-value>ghs@admin</param-value>  
+    </init-param>    
+    <init-param>     
+        <param-name>loginPassword</param-name>     
+        <param-value>sfa@01163853</param-value>  
+    </init-param >    
+    <init-param>   
+        <param-name>allow</param-name>    
+        <param-value></param-value>  
+    </init-param>   
+    <init-param>   
+        <param-name>deny</param-name>    
+        <param-value></param-value>  
+    </init-param>   
+    <load-on-startup>100</load-on-startup>   
+</servlet>    
