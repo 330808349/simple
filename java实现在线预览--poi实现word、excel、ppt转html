@@ -1,0 +1,10 @@
+文章
+http://blog.csdn.net/yjclsx/article/details/51441632
+注意事项
+poi 由几个jar组成 在 http://poi.apache.org/download.html 页面可以下载相应jar 及相关文档
+  poi-3.17.jar 
+  poi-examples-3.17.jar 
+  poi-excelant-3.17.jar 
+  poi-ooxml-3.17.jar
+  poi-ooxml-schemas-3.17.jar
+  poi-scratchpad-3.17.jar
