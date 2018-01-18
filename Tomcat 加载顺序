@@ -1,0 +1,25 @@
+Tomcat启动时classloader加载顺序   Tomcat的class加载的优先顺序一览     
+1.最先是$JAVA_HOME/jre/lib/ext/下的jar文件。     
+2.环境变量CLASSPATH中的jar和class文件。     
+3.$CATALINA_HOME/common/classes下的class文件。    
+4.$CATALINA_HOME/commons/endorsed下的jar文件。     
+5.$CATALINA_HOME/commons/i18n下的jar文件。     
+6.$CATALINA_HOME/common/lib   下的jar文件。     （JDBC驱动之类的jar文件可以放在这里，
+    这样就可以避免在server.xml配置好数据源却出现找不到JDBC   Driver的情况。）     
+7.$CATALINA_HOME/server/classes下的class文件。     
+8.$CATALINA_HOME/server/lib/下的jar文件。    
+9.$CATALINA_BASE/shared/classes   下的class文件。    
+10.$CATALINA_BASE/shared/lib下的jar文件。    
+11.各自具体的webapp   /WEB-INF/classes下的class文件。   
+12.各自具体的webapp   /WEB-INF/lib下的jar文件。   
+
+java项目中Classpath路径
+1、src不是classpath, WEB-INF/classes,lib才是classpath，WEB-INF/ 是资源目录, 客户端不能直接访问。
+2、WEB-INF/classes目录存放src目录java文件编译之后的class文件，xml、properties等资源配置文件，这是一个定位资源的入口。
+3、引用classpath路径下的文件，只需在文件名前加classpath:<param-value>classpath:applicationContext-*.xml</param-value> 
+    <!-- 引用其子目录下的文件,如 -->
+    <param-value>classpath:context/conf/controller.xml</param-value>
+4、lib和classes同属classpath，两者的访问优先级为: lib>classes。
+5、classpath 和 classpath* 区别：
+    classpath：只会到你的class路径中查找找文件;
+    classpath*：不仅包含class路径，还包括jar文件中(class路径)进行查找。
