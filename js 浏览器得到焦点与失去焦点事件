@@ -1,0 +1,59 @@
+
+http://www.51xuediannao.com/html5/visibilitychange.html
+
+
+监听 onfocus() 和window.onblur()事件实现//当前窗口得到焦点 
+window.onfocus = function() { 
+  //播放动画或视频 
+}; 
+ 
+//当前窗口失去焦点 
+window.onblur = function() { 
+  //暂停动画或视频 
+};这个方法可以实现切换标签暂停动画视频，但是会带来一个问题，由于是判断焦点，如果是在当前页面上铺上一个小窗口，那当前页面就暂停了动画，试想，如果你一边看片，一边开个聊天窗口与MM聊天，当你操作聊天窗口的时候，视频暂停了，这并不是你想要的效果。现在我们来看看HTML5是怎么解决的。H5 提供了很多简单实用的 API，Page Visibility API 就是其中之一。 Page Visibility API能有效的帮助我们完成这样的判断。 使用html5的Page Visibility API来实现这个 API 本身非常简单，由以下三部分组成。document.hidden：表示页面是否隐藏的布尔值。页面隐藏包括 页面在后台标签页中 或者 浏览器最小化 （注意，页面被其他软件遮盖并不算隐藏，比如打开的 sublime 遮住了浏览器）。document.visibilityState：表示下面 4 个可能状态的值hidden：页面在后台标签页中或者浏览器最小化visible：页面在前台标签页中prerender：页面在屏幕外执行预渲染处理 document.hidden 的值为 trueunloaded：页面正在从内存中卸载Visibilitychange事件：当文档从可见变为不可见或者从不可见变为可见时，会触发该事件。这样，我们可以监听 Visibilitychange 事件，当该事件触发时，获取 document.hidden 的值，根据该值进行页面一些事件的处理。document.addEventListener('visibilitychange', function() { 
+  var isHidden = document.hidden; 
+  if (isHidden) { 
+    // 动画视频暂停 
+  } else { 
+    // 动画视频开始 
+  } 
+});结合demo中的实例，切换标签或者最小化的时候，demo中的视频会暂停，恢复当前页面时，demo中的视频会继续播放。完整的代码如下：var hidden, visibilityChange;  
+if (typeof document.hidden !== "undefined") {  
+  hidden = "hidden"; 
+  visibilityChange = "visibilitychange"; 
+} else if (typeof document.msHidden !== "undefined") { 
+  hidden = "msHidden"; 
+  visibilityChange = "msvisibilitychange"; 
+} else if (typeof document.webkitHidden !== "undefined") { 
+  hidden = "webkitHidden"; 
+  visibilityChange = "webkitvisibilitychange"; 
+} 
+  
+var videoElement = document.getElementById("videoElement"); 
+ 
+// 如果页面被隐藏，则暂停播放，如果页面恢复，则继续播放 
+function handleVisibilityChange() { 
+  if (document[hidden]) { 
+    videoElement.pause(); 
+  } else { 
+    videoElement.play(); 
+  } 
+} 
+ 
+// 判断浏览器的支持情况 
+if (typeof document.addEventListener === "undefined" || typeof document[hidden] === "undefined") { 
+  consol.log("This demo requires a browser, such as Google Chrome or Firefox, that supports the Page Visibility API."); 
+} else { 
+  // 监听visibilityChange事件    
+  document.addEventListener(visibilityChange, handleVisibilityChange, false); 
+     
+  // 当播放器暂停的时候，将页面标题设置为：Paused. 
+  videoElement.addEventListener("pause", function(){ 
+    document.title = 'Paused'; 
+  }, false); 
+     
+  // 当播放器正常播放时，将页面标题设置为：Playing. 
+  videoElement.addEventListener("play", function(){ 
+    document.title = 'Playing';  
+  }, false); 
+}
