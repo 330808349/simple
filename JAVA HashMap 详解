@@ -1,0 +1,6 @@
+equal函数和hash的约定关系是：
+  equal为true，hash值必须相等；
+  hash值相等，equal未必为true,这就是hash冲突的情况；
+  如果违反这个约定，将会出现奇怪的逻辑现象，两个equal为true的对象，通过hashMap获取得到的值不一样，因为他们的hash值不同。
+  
+  http://blog.csdn.net/u014313623/article/details/49586473
