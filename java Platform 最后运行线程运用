@@ -1,0 +1,10 @@
+Platfrom 是 javaFx 中的API  ,实在当前线程最后执行的新线程 ,有多个注册最后执行的线程后,会根据线程注册的先后顺序执行 ,
+
+例如 :
+
+Platform.runLater(new Runnable() {            
+    @Override           
+    public void run() {   
+      //TODO
+    }       
+});
