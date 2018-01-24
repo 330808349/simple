@@ -1,0 +1,8 @@
+<script>      
+    if(top.location!=self.location){      
+      //如果有父页面
+      top.location = "<%=basePath%>/login.jsp";      
+    }else{         
+      window.location.href = "<%=basePath%>/login.jsp";     
+    }  
+</script> 
