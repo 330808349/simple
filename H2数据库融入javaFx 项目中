@@ -14,3 +14,5 @@ public void stop() throws Exception {
   }
   super.stop();
 }
+
+需要引进 h2-1.4.186.jar
