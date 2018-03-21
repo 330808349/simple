@@ -1,0 +1,37 @@
+/* (non-Javadoc)     * @see com.sfa.hcc.task.manage.dao.ITaskPlaneTypeOrderDao#findTaskPlaneOrder(java.lang.String, java.lang.Long)     */
+@SuppressWarnings("unchecked")   
+@Override   
+public List<TaskPlaneTypeOrderVo> findTaskPlaneOrder(String planeType, Long arrivalDeparture) {        
+  StringBuilder sb = new StringBuilder();        
+  sb.append("  ");
+  Session session = getCurrentSession();      
+  SQLQuery query = session.createSQLQuery(sb.toString());               
+  query.setString("planeType", planeType);      
+  query.setLong("arrivalDeparture", arrivalDeparture);     
+  query.addScalar("taskTemplateName",StandardBasicTypes.STRING);    
+  query.setResultTransformer(new TransformerBean(TaskPlaneTypeOrderVo.class) );      
+  return query.list();   
+}
+
+TransformerBean 类 的书写
+
+public class TransformerBean implements ResultTransformer {
+    private static final long serialVersionUID = 5921971154720661738L;    private final Class<?> resultClass;    private Map<String, String> parmMap = new HashMap<String, String>();    private int length = 0;    private Set<String>[] objSet = null;    private static final Log logger = LogFactory.getLog(TransformerBean.class);
+    /**     * 构造方法     *     * @param resultClass     */    public TransformerBean(Class<?> resultClass) {        this.resultClass = resultClass;        if (resultClass != null) {            try {                Set tmpSet = BeanUtils.describe(resultClass.newInstance()).keySet();                for (Iterator<String> iter = tmpSet.iterator(); iter.hasNext(); ) {                    String key = iter.next();                    parmMap.put(key.toLowerCase(), key);                }            } catch (Exception e) {                logger.error(e);                e.printStackTrace();            }        }    }
+    @Override    public List transformList(List collection) {        return collection;    }
+    private void constitResultSet(Object[] tuple) throws Exception {        length = tuple.length;        objSet = new Set[length];        for (int i = 0; i < length; i++) {            objSet[i] = new HashSet<String>();            Set tmpSet = BeanUtils.describe(tuple[i]).keySet();            for (Iterator<String> iter = tmpSet.iterator(); iter.hasNext(); ) {                objSet[i].add(iter.next().toLowerCase());            }        }    }
+    private Object getObjValue(Object[] tuple, String key) throws Exception {        Object result = null;        for (int i = 0; i < length; i++) {            if (objSet[i].contains(key.toLowerCase())) {                result = PropertyUtils.getProperty(tuple[i], convertToStr(key));                break;            }        }        return result;    }
+    @Override    public Object transformTuple(Object[] tuple, String[] aliases) {        Object result = null;        try {            if (resultClass != null) {                result = resultClass.newInstance();                if (aliases != null) {                    int length = aliases.length;                    for (int i = 0; i < length; i++) {                        String alias = convertDbStrToStr(aliases[i]).toLowerCase();                        if (tuple[i] == null || !parmMap.containsKey(alias)                                || "rownum_".equals(alias)                                || "rownum".equals(alias))                            continue;
+                        if (tuple[i] instanceof Timestamp) {                            Timestamp t = (Timestamp) tuple[i];                            BeanUtils.setProperty(result, parmMap.get(alias), new Date(t.getTime()));                        } else {                            BeanUtils.setProperty(result, parmMap.get(alias), tuple[i]);                        }                    }                } else {                    if (objSet == null) {                        constitResultSet(tuple);                    }                    for (Iterator<String> iterator = parmMap.keySet().iterator(); iterator.hasNext(); ) {                        String key = parmMap.get(iterator.next());                        Object value = getObjValue(tuple, key);                        if (value != null)                            BeanUtils.setProperty(result, key, value);                    }                }            } else {                if (tuple != null && tuple.length == 1)                    result = tuple[0];                else                    result = tuple;            }        } catch (Exception e) {            logger.error(e);            e.printStackTrace();            throw new HibernateException("Could not instantiate resultclass: " + resultClass.getName());        }        return result;    }
+    static String convertDbStrToStr(Object obj) {        String str = StringUtils.EMPTY;        if (!isEmpty(obj)) {            str = obj.toString().trim().toLowerCase();        }        if (str.contains("_")) {            String[] tmp = str.split("_");            int length = tmp.length;            str = tmp[0];            for (int i = 1; i < length; i++) {                String strtmp = tmp[i];                str = str + strtmp.substring(0, 1).toUpperCase() + strtmp.substring(1, strtmp.length());            }        }        return str;    }
+    static String convertToStrs(Object obj) {        String str = " ";        if (!isEmpty(obj)) {            str = obj.toString().trim();        }        return str;    }
+    static String convertToStr(Object obj) {        String str = StringUtils.EMPTY;        if (!isEmpty(obj)) {            str = obj.toString().trim();        }        return str;    }
+    static boolean isEmpty(Object obj) {        boolean result = true;        try {            if (obj == null)                return true;            Class cls = obj.getClass();            if (cls.isArray()) {                Object[] objs = (Object[]) obj;                if (objs.length > 0) {                    result = false;                }            }            if (((obj instanceof String)) && (!obj.toString().trim().equals(StringUtils.EMPTY))) {                result = false;            }            if ((obj instanceof Collection)) {                Collection coll = (Collection) obj;                if (!coll.isEmpty()) {                    result = false;                }            }            if ((obj instanceof Map)) {                Map map = (Map) obj;                if (!map.isEmpty()) {                    result = false;                }            }            if ((obj instanceof Number)) {                Number num = (Number) obj;                if (!num.toString().trim().equals(StringUtils.EMPTY))                    result = false;            }            if ((obj instanceof Double)) {                Double dou = (Double) obj;                if (!dou.toString().trim().equals(StringUtils.EMPTY))                    result = false;            }            if ((obj instanceof Float)) {                Float fla = (Float) obj;                if (!fla.toString().trim().equals(StringUtils.EMPTY))                    result = false;            }            if ((obj instanceof Date))                result = false;        } catch (Exception e) {            logger.error(e);            e.printStackTrace();        }        return result;    }}
+    
+    
+    TaskPlaneTypeOrderVo 类 就是普通的实体类
+    
+    
+    
+    参考 网站 https://www.2cto.com/kf/201311/256757.html
+    
