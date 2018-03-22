@@ -1,0 +1,11 @@
+
+//得到 datagrid 选中行
+var clickRow = $(".datagrid-view2").find(".datagrid-body").find("tr")[rowIndex];
+// 得到列数
+var columnCount = $(clickRow).find("td").length;
+//在后面插入
+$(clickRow).after("<tr class='flightDetailTr fligh_"         + rowIndex + "'>
+<td colspan='"         + columnCount + "'>"         
++ myHtml + "<td></tr>");
+//在前面插入
+$(clickRow).before(HTML);
